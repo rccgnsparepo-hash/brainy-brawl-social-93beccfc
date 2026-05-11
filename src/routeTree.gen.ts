@@ -9,15 +9,28 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as CreateRouteImport } from './routes/create'
 import { Route as ArenaRouteImport } from './routes/arena'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DuelDuelIdRouteImport } from './routes/duel.$duelId'
 
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExploreRoute = ExploreRouteImport.update({
@@ -40,20 +53,31 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DuelDuelIdRoute = DuelDuelIdRouteImport.update({
+  id: '/duel/$duelId',
+  path: '/duel/$duelId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
+  '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
+  '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -61,14 +85,42 @@ export interface FileRoutesById {
   '/arena': typeof ArenaRoute
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
+  '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/signup': typeof SignupRoute
+  '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/arena' | '/create' | '/explore' | '/profile'
+  fullPaths:
+    | '/'
+    | '/arena'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/duel/$duelId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/arena' | '/create' | '/explore' | '/profile'
-  id: '__root__' | '/' | '/arena' | '/create' | '/explore' | '/profile'
+  to:
+    | '/'
+    | '/arena'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/duel/$duelId'
+  id:
+    | '__root__'
+    | '/'
+    | '/arena'
+    | '/create'
+    | '/explore'
+    | '/login'
+    | '/profile'
+    | '/signup'
+    | '/duel/$duelId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -76,16 +128,33 @@ export interface RootRouteChildren {
   ArenaRoute: typeof ArenaRoute
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
+  LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  SignupRoute: typeof SignupRoute
+  DuelDuelIdRoute: typeof DuelDuelIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/explore': {
@@ -116,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/duel/$duelId': {
+      id: '/duel/$duelId'
+      path: '/duel/$duelId'
+      fullPath: '/duel/$duelId'
+      preLoaderRoute: typeof DuelDuelIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -124,7 +200,10 @@ const rootRouteChildren: RootRouteChildren = {
   ArenaRoute: ArenaRoute,
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
+  LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  SignupRoute: SignupRoute,
+  DuelDuelIdRoute: DuelDuelIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

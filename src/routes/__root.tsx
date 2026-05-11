@@ -4,12 +4,16 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 
 import appCss from "../styles.css?url";
 import { BottomNav } from "@/components/bottom-nav";
+import { AuthProvider } from "@/lib/auth";
+import { AuthGate } from "@/components/auth-gate";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -110,11 +114,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showNav = pathname !== "/login" && pathname !== "/signup";
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Outlet />
-      <BottomNav />
+      <AuthProvider>
+        <AuthGate>
+          <Outlet />
+          {showNav && <BottomNav />}
+        </AuthGate>
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
