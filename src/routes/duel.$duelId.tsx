@@ -112,7 +112,7 @@ function DuelPage() {
     if (!round || picked) return;
     setPicked(opt);
     const col = isA ? "answer_a" : "answer_b";
-    await supabase.from("duel_rounds").update({ [col]: opt }).eq("id", round.id);
+    await supabase.from("duel_rounds").update(isA ? { answer_a: opt } : { answer_b: opt }).eq("id", round.id);
   };
 
   const resolveRound = async () => {
