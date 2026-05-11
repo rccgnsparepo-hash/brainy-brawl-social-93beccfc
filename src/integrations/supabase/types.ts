@@ -14,16 +14,565 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      challenge_solves: {
+        Row: {
+          challenge_id: string
+          correct: boolean
+          created_at: string
+          id: string
+          time_taken_ms: number | null
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          correct: boolean
+          created_at?: string
+          id?: string
+          time_taken_ms?: number | null
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          correct?: boolean
+          created_at?: string
+          id?: string
+          time_taken_ms?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_solves_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_solves_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      challenges: {
+        Row: {
+          answer: string
+          created_at: string
+          creator_id: string
+          difficulty: Database["public"]["Enums"]["difficulty"]
+          id: string
+          options: string[]
+          question: string
+          reward_xp: number
+          solved_count: number
+          time_limit: number
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          creator_id: string
+          difficulty?: Database["public"]["Enums"]["difficulty"]
+          id?: string
+          options?: string[]
+          question: string
+          reward_xp?: number
+          solved_count?: number
+          time_limit?: number
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          creator_id?: string
+          difficulty?: Database["public"]["Enums"]["difficulty"]
+          id?: string
+          options?: string[]
+          question?: string
+          reward_xp?: number
+          solved_count?: number
+          time_limit?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenges_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duel_queue: {
+        Row: {
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duel_rounds: {
+        Row: {
+          answer: string
+          answer_a: string | null
+          answer_b: string | null
+          created_at: string
+          duel_id: string
+          id: string
+          options: string[]
+          question: string
+          round_number: number
+          winner: string | null
+        }
+        Insert: {
+          answer: string
+          answer_a?: string | null
+          answer_b?: string | null
+          created_at?: string
+          duel_id: string
+          id?: string
+          options: string[]
+          question: string
+          round_number: number
+          winner?: string | null
+        }
+        Update: {
+          answer?: string
+          answer_a?: string | null
+          answer_b?: string | null
+          created_at?: string
+          duel_id?: string
+          id?: string
+          options?: string[]
+          question?: string
+          round_number?: number
+          winner?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_rounds_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_rounds_winner_fkey"
+            columns: ["winner"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duels: {
+        Row: {
+          created_at: string
+          current_round: number
+          finished_at: string | null
+          id: string
+          player_a: string
+          player_b: string | null
+          score_a: number
+          score_b: number
+          status: Database["public"]["Enums"]["duel_status"]
+          total_rounds: number
+          winner_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_round?: number
+          finished_at?: string | null
+          id?: string
+          player_a: string
+          player_b?: string | null
+          score_a?: number
+          score_b?: number
+          status?: Database["public"]["Enums"]["duel_status"]
+          total_rounds?: number
+          winner_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_round?: number
+          finished_at?: string | null
+          id?: string
+          player_a?: string
+          player_b?: string | null
+          score_a?: number
+          score_b?: number
+          status?: Database["public"]["Enums"]["duel_status"]
+          total_rounds?: number
+          winner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duels_player_a_fkey"
+            columns: ["player_a"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duels_player_b_fkey"
+            columns: ["player_b"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duels_winner_id_fkey"
+            columns: ["winner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          body: string | null
+          created_at: string
+          id: string
+          link: string | null
+          read: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title: string
+          type: Database["public"]["Enums"]["notif_type"]
+          user_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          link?: string | null
+          read?: boolean
+          title?: string
+          type?: Database["public"]["Enums"]["notif_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          achievement_icon: string | null
+          achievement_title: string | null
+          challenge_id: string | null
+          comments_count: number
+          content: string
+          created_at: string
+          duel_id: string | null
+          id: string
+          likes_count: number
+          reposts_count: number
+          type: Database["public"]["Enums"]["post_type"]
+          user_id: string
+        }
+        Insert: {
+          achievement_icon?: string | null
+          achievement_title?: string | null
+          challenge_id?: string | null
+          comments_count?: number
+          content: string
+          created_at?: string
+          duel_id?: string | null
+          id?: string
+          likes_count?: number
+          reposts_count?: number
+          type?: Database["public"]["Enums"]["post_type"]
+          user_id: string
+        }
+        Update: {
+          achievement_icon?: string | null
+          achievement_title?: string | null
+          challenge_id?: string | null
+          comments_count?: number
+          content?: string
+          created_at?: string
+          duel_id?: string | null
+          id?: string
+          likes_count?: number
+          reposts_count?: number
+          type?: Database["public"]["Enums"]["post_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar: string
+          bio: string | null
+          created_at: string
+          display_name: string
+          grade: string | null
+          handle: string
+          id: string
+          instagram: string | null
+          last_active_date: string | null
+          level: number
+          losses: number
+          school: string
+          streak: number
+          updated_at: string
+          wins: number
+          xp: number
+        }
+        Insert: {
+          avatar?: string
+          bio?: string | null
+          created_at?: string
+          display_name: string
+          grade?: string | null
+          handle: string
+          id: string
+          instagram?: string | null
+          last_active_date?: string | null
+          level?: number
+          losses?: number
+          school: string
+          streak?: number
+          updated_at?: string
+          wins?: number
+          xp?: number
+        }
+        Update: {
+          avatar?: string
+          bio?: string | null
+          created_at?: string
+          display_name?: string
+          grade?: string | null
+          handle?: string
+          id?: string
+          instagram?: string | null
+          last_active_date?: string | null
+          level?: number
+          losses?: number
+          school?: string
+          streak?: number
+          updated_at?: string
+          wins?: number
+          xp?: number
+        }
+        Relationships: []
+      }
+      reposts: {
+        Row: {
+          created_at: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reposts_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reposts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      xp_events: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "xp_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      award_xp: {
+        Args: { _amount: number; _reason: string; _user_id: string }
+        Returns: undefined
+      }
+      finish_duel: { Args: { _duel_id: string }; Returns: undefined }
+      join_duel_queue: { Args: never; Returns: Json }
+      solve_challenge: {
+        Args: { _answer: string; _challenge_id: string; _time_taken_ms: number }
+        Returns: Json
+      }
     }
     Enums: {
-      [_ in never]: never
+      difficulty: "easy" | "medium" | "hard"
+      duel_status: "waiting" | "active" | "finished" | "cancelled"
+      notif_type:
+        | "challenge_invite"
+        | "duel_invite"
+        | "duel_win"
+        | "duel_loss"
+        | "streak_reward"
+        | "level_up"
+        | "like"
+        | "comment"
+        | "repost"
+        | "mention"
+      post_type: "text" | "challenge" | "duel" | "achievement"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +699,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      difficulty: ["easy", "medium", "hard"],
+      duel_status: ["waiting", "active", "finished", "cancelled"],
+      notif_type: [
+        "challenge_invite",
+        "duel_invite",
+        "duel_win",
+        "duel_loss",
+        "streak_reward",
+        "level_up",
+        "like",
+        "comment",
+        "repost",
+        "mention",
+      ],
+      post_type: ["text", "challenge", "duel", "achievement"],
+    },
   },
 } as const
