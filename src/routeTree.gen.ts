@@ -10,17 +10,25 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as CreateRouteImport } from './routes/create'
+import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as ArenaRouteImport } from './routes/arena'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DuelDuelIdRouteImport } from './routes/duel.$duelId'
+import { Route as ChatsUserIdRouteImport } from './routes/chats.$userId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
   path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -43,6 +51,11 @@ const CreateRoute = CreateRouteImport.update({
   path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatsRoute = ChatsRouteImport.update({
+  id: '/chats',
+  path: '/chats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ArenaRoute = ArenaRouteImport.update({
   id: '/arena',
   path: '/arena',
@@ -58,36 +71,50 @@ const DuelDuelIdRoute = DuelDuelIdRouteImport.update({
   path: '/duel/$duelId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatsUserIdRoute = ChatsUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => ChatsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
+  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
+  '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
 }
 export interface FileRouteTypes {
@@ -95,41 +122,52 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/arena'
+    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
+    | '/settings'
     | '/signup'
+    | '/chats/$userId'
     | '/duel/$duelId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/arena'
+    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
+    | '/settings'
     | '/signup'
+    | '/chats/$userId'
     | '/duel/$duelId'
   id:
     | '__root__'
     | '/'
     | '/arena'
+    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
+    | '/settings'
     | '/signup'
+    | '/chats/$userId'
     | '/duel/$duelId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArenaRoute: typeof ArenaRoute
+  ChatsRoute: typeof ChatsRouteWithChildren
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
+  SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
   DuelDuelIdRoute: typeof DuelDuelIdRoute
 }
@@ -141,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/signup'
       fullPath: '/signup'
       preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -171,6 +216,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chats': {
+      id: '/chats'
+      path: '/chats'
+      fullPath: '/chats'
+      preLoaderRoute: typeof ChatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/arena': {
       id: '/arena'
       path: '/arena'
@@ -192,19 +244,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DuelDuelIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chats/$userId': {
+      id: '/chats/$userId'
+      path: '/$userId'
+      fullPath: '/chats/$userId'
+      preLoaderRoute: typeof ChatsUserIdRouteImport
+      parentRoute: typeof ChatsRoute
+    }
   }
 }
+
+interface ChatsRouteChildren {
+  ChatsUserIdRoute: typeof ChatsUserIdRoute
+}
+
+const ChatsRouteChildren: ChatsRouteChildren = {
+  ChatsUserIdRoute: ChatsUserIdRoute,
+}
+
+const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArenaRoute: ArenaRoute,
+  ChatsRoute: ChatsRouteWithChildren,
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
+  SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
   DuelDuelIdRoute: DuelDuelIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

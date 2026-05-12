@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Compass, Swords, Plus, User } from "lucide-react";
+import { Home, Compass, Swords, MessageCircle, User } from "lucide-react";
 
 type Tab = { to: string; icon: typeof Home; label: string; highlight?: boolean };
 const tabs: Tab[] = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/explore", icon: Compass, label: "Explore" },
   { to: "/arena", icon: Swords, label: "Arena", highlight: true },
-  { to: "/create", icon: Plus, label: "Create" },
+  { to: "/chats", icon: MessageCircle, label: "Chats" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
@@ -18,7 +18,7 @@ export function BottomNav() {
       <div className="glass-strong border-t border-glass-border px-2 pb-[env(safe-area-inset-bottom)] pt-2">
         <ul className="flex items-center justify-around">
           {tabs.map(({ to, icon: Icon, label, highlight }) => {
-            const active = pathname === to;
+            const active = pathname === to || (to !== "/" && pathname.startsWith(to));
             if (highlight) {
               return (
                 <li key={to}>
@@ -36,7 +36,7 @@ export function BottomNav() {
               <li key={to}>
                 <Link
                   to={to}
-                  className={`flex flex-col items-center gap-0.5 rounded-xl px-4 py-2 text-xs transition-colors ${
+                  className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-2 text-[11px] transition-colors ${
                     active ? "text-foreground" : "text-muted-foreground"
                   }`}
                 >
