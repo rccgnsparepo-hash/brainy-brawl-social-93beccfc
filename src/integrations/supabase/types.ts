@@ -170,6 +170,8 @@ export type Database = {
           answer: string
           answer_a: string | null
           answer_b: string | null
+          answered_at_a: string | null
+          answered_at_b: string | null
           created_at: string
           duel_id: string
           id: string
@@ -182,6 +184,8 @@ export type Database = {
           answer: string
           answer_a?: string | null
           answer_b?: string | null
+          answered_at_a?: string | null
+          answered_at_b?: string | null
           created_at?: string
           duel_id: string
           id?: string
@@ -194,6 +198,8 @@ export type Database = {
           answer?: string
           answer_a?: string | null
           answer_b?: string | null
+          answered_at_a?: string | null
+          answered_at_b?: string | null
           created_at?: string
           duel_id?: string
           id?: string
@@ -315,6 +321,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          read: boolean
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          read?: boolean
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      notification_prefs: {
+        Row: {
+          challenges: boolean
+          comments: boolean
+          duels: boolean
+          in_app: boolean
+          likes: boolean
+          streaks: boolean
+          updated_at: string
+          user_id: string
+          web_push: boolean
+        }
+        Insert: {
+          challenges?: boolean
+          comments?: boolean
+          duels?: boolean
+          in_app?: boolean
+          likes?: boolean
+          streaks?: boolean
+          updated_at?: string
+          user_id: string
+          web_push?: boolean
+        }
+        Update: {
+          challenges?: boolean
+          comments?: boolean
+          duels?: boolean
+          in_app?: boolean
+          likes?: boolean
+          streaks?: boolean
+          updated_at?: string
+          user_id?: string
+          web_push?: boolean
+        }
+        Relationships: []
       }
       notifications: {
         Row: {
@@ -510,6 +579,33 @@ export type Database = {
           },
         ]
       }
+      school_leaderboard_weekly: {
+        Row: {
+          member_count: number
+          rank: number
+          school: string
+          total_xp: number
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          member_count?: number
+          rank?: number
+          school: string
+          total_xp?: number
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          member_count?: number
+          rank?: number
+          school?: string
+          total_xp?: number
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: []
+      }
       xp_events: {
         Row: {
           amount: number
@@ -553,6 +649,7 @@ export type Database = {
       }
       finish_duel: { Args: { _duel_id: string }; Returns: undefined }
       join_duel_queue: { Args: never; Returns: Json }
+      refresh_school_leaderboard: { Args: never; Returns: undefined }
       solve_challenge: {
         Args: { _answer: string; _challenge_id: string; _time_taken_ms: number }
         Returns: Json

@@ -1,10 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Swords, Clock, Trophy, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { Swords, Clock, Trophy, ArrowLeft, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/duel/$duelId")({
   component: DuelPage,
@@ -16,9 +15,17 @@ const QUESTION_BANK = [
   { question: "Capital of Australia?", options: ["Sydney", "Canberra", "Melbourne", "Perth"], answer: "Canberra" },
   { question: "√144 = ?", options: ["10", "11", "12", "13"], answer: "12" },
   { question: "Author of 1984?", options: ["Huxley", "Orwell", "Bradbury", "Salinger"], answer: "Orwell" },
-  { question: "H2O is?", options: ["Salt", "Water", "Oxygen", "Acid"], answer: "Water" },
+  { question: "H₂O is?", options: ["Salt", "Water", "Oxygen", "Acid"], answer: "Water" },
   { question: "15% of 200?", options: ["20", "25", "30", "35"], answer: "30" },
   { question: "Largest planet?", options: ["Saturn", "Mars", "Jupiter", "Earth"], answer: "Jupiter" },
+  { question: "Who painted Mona Lisa?", options: ["Van Gogh", "Da Vinci", "Picasso", "Monet"], answer: "Da Vinci" },
+  { question: "Speed of light (km/s)?", options: ["150,000", "300,000", "450,000", "600,000"], answer: "300,000" },
+  { question: "Smallest prime?", options: ["0", "1", "2", "3"], answer: "2" },
+  { question: "Currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], answer: "Yen" },
+  { question: "DNA stands for?", options: ["Deoxyribonucleic Acid", "Diatomic Nucleic Acid", "Dual Nuclear Acid", "Direct Nano Acid"], answer: "Deoxyribonucleic Acid" },
+  { question: "9² + 4² = ?", options: ["97", "85", "100", "81"], answer: "97" },
+  { question: "Who wrote Hamlet?", options: ["Dickens", "Shakespeare", "Twain", "Austen"], answer: "Shakespeare" },
+  { question: "Continent of Egypt?", options: ["Asia", "Europe", "Africa", "Oceania"], answer: "Africa" },
 ];
 
 function DuelPage() {
@@ -29,6 +36,8 @@ function DuelPage() {
   const [round, setRound] = useState<any>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(15);
+  const startedAtRef = useRef<number>(Date.now());
+  const ROUND_SECONDS = 15;
 
   const isA = user?.id === duel?.player_a;
 
@@ -41,25 +50,27 @@ function DuelPage() {
     setDuel(data);
   };
 
-  const loadCurrentRound = async () => {
-    if (!duel || duel.status !== "active") return;
+  const loadCurrentRound = async (d?: any) => {
+    const cur = d ?? duel;
+    if (!cur || cur.status !== "active") return;
     const { data } = await supabase
       .from("duel_rounds")
       .select("*")
       .eq("duel_id", duelId)
-      .eq("round_number", duel.current_round)
+      .eq("round_number", cur.current_round)
       .maybeSingle();
     if (data) {
       setRound(data);
-      setPicked(isA ? data.answer_a : data.answer_b);
-    } else if (duel.current_round === 0 && user?.id === duel.player_a) {
-      // Player A creates round 1
-      await advanceRound(1);
+      const myAns = isA ? data.answer_a : data.answer_b;
+      setPicked(myAns);
+      if (!myAns) startedAtRef.current = Date.now();
+    } else if (cur.current_round === 0 && user?.id === cur.player_a) {
+      await advanceRound(cur, 1);
     }
   };
 
-  const advanceRound = async (n: number) => {
-    if (n > duel.total_rounds) {
+  const advanceRound = async (cur: any, n: number) => {
+    if (n > cur.total_rounds) {
       await supabase.rpc("finish_duel", { _duel_id: duelId });
       return;
     }
@@ -78,7 +89,10 @@ function DuelPage() {
     loadDuel();
     const ch = supabase
       .channel(`duel-${duelId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "duels", filter: `id=eq.${duelId}` }, () => loadDuel())
+      .on("postgres_changes", { event: "*", schema: "public", table: "duels", filter: `id=eq.${duelId}` }, (p) => {
+        const newDuel = p.new as any;
+        setDuel((d: any) => ({ ...(d ?? {}), ...newDuel }));
+      })
       .on("postgres_changes", { event: "*", schema: "public", table: "duel_rounds", filter: `duel_id=eq.${duelId}` }, () => loadCurrentRound())
       .subscribe();
     return () => {
@@ -87,9 +101,8 @@ function DuelPage() {
   }, [duelId]);
 
   useEffect(() => {
-    loadCurrentRound();
-    setTimeLeft(15);
-    setPicked(null);
+    if (duel) loadCurrentRound(duel);
+    setTimeLeft(ROUND_SECONDS);
   }, [duel?.current_round, duel?.status]);
 
   // Round timer
@@ -111,8 +124,10 @@ function DuelPage() {
   const submitAnswer = async (opt: string) => {
     if (!round || picked) return;
     setPicked(opt);
-    const col = isA ? "answer_a" : "answer_b";
-    await supabase.from("duel_rounds").update(isA ? { answer_a: opt } : { answer_b: opt }).eq("id", round.id);
+    const patch = isA
+      ? { answer_a: opt, answered_at_a: new Date().toISOString() }
+      : { answer_b: opt, answered_at_b: new Date().toISOString() };
+    await supabase.from("duel_rounds").update(patch).eq("id", round.id);
   };
 
   const resolveRound = async () => {
@@ -123,9 +138,15 @@ function DuelPage() {
     const bRight = fresh.answer_b === fresh.answer;
     let winner: string | null = null;
     let dScoreA = 0, dScoreB = 0;
-    if (aRight && !bRight) { winner = duel.player_a; dScoreA = 1; }
-    else if (bRight && !aRight) { winner = duel.player_b; dScoreB = 1; }
-    else if (aRight && bRight) { dScoreA = 1; dScoreB = 1; }
+    if (aRight && bRight) {
+      // fastest correct answer wins the round
+      const ta = fresh.answered_at_a ? new Date(fresh.answered_at_a).getTime() : Infinity;
+      const tb = fresh.answered_at_b ? new Date(fresh.answered_at_b).getTime() : Infinity;
+      if (ta < tb) { winner = duel.player_a; dScoreA = 1; }
+      else if (tb < ta) { winner = duel.player_b; dScoreB = 1; }
+      else { dScoreA = 1; dScoreB = 1; }
+    } else if (aRight) { winner = duel.player_a; dScoreA = 1; }
+    else if (bRight) { winner = duel.player_b; dScoreB = 1; }
 
     await supabase.from("duel_rounds").update({ winner }).eq("id", fresh.id);
     if (dScoreA || dScoreB) {
@@ -134,9 +155,8 @@ function DuelPage() {
         score_b: duel.score_b + dScoreB,
       }).eq("id", duelId);
     }
-    // Player A advances next round
     if (user?.id === duel.player_a) {
-      setTimeout(() => advanceRound(duel.current_round + 1), 1500);
+      setTimeout(() => advanceRound({ ...duel, score_a: duel.score_a + dScoreA, score_b: duel.score_b + dScoreB }, duel.current_round + 1), 1500);
     }
   };
 
@@ -155,6 +175,7 @@ function DuelPage() {
   const oppScore = isA ? duel.score_b : duel.score_a;
   const won = duel.winner_id === user?.id;
   const draw = duel.status === "finished" && !duel.winner_id;
+  const showResult = round && (round.winner !== null || (round.answer_a && round.answer_b));
 
   return (
     <AppShell
@@ -182,7 +203,7 @@ function DuelPage() {
       {duel.status === "active" && round && (
         <div className="mt-4 glass-strong rounded-2xl p-5 animate-fade-in">
           <div className="mb-3 flex items-center justify-between text-xs">
-            <span className="rounded-full bg-secondary px-2 py-0.5 font-semibold uppercase">Question</span>
+            <span className="rounded-full bg-secondary px-2 py-0.5 font-semibold uppercase">Round {round.round_number}</span>
             <span className="flex items-center gap-1 text-warning">
               <Clock className="h-3 w-3" /> {timeLeft}s
             </span>
@@ -191,19 +212,21 @@ function DuelPage() {
           <div className="grid grid-cols-2 gap-2">
             {round.options.map((opt: string) => {
               const isPicked = picked === opt;
-              const showResult = round.winner !== null || (round.answer_a && round.answer_b);
               const isCorrect = showResult && opt === round.answer;
+              const isWrongPick = showResult && isPicked && opt !== round.answer;
               return (
                 <button
                   key={opt}
-                  disabled={!!picked}
+                  disabled={!!picked || showResult}
                   onClick={() => submitAnswer(opt)}
                   className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all ${
                     isCorrect
                       ? "border-success bg-success/15 text-success"
-                      : isPicked
-                        ? "border-neon-purple bg-neon-purple/15"
-                        : "border-glass-border bg-secondary/40"
+                      : isWrongPick
+                        ? "border-destructive bg-destructive/15 text-destructive"
+                        : isPicked
+                          ? "border-neon-purple bg-neon-purple/15"
+                          : "border-glass-border bg-secondary/40 hover:border-neon-purple"
                   } disabled:opacity-70`}
                 >
                   {opt}
@@ -211,6 +234,11 @@ function DuelPage() {
               );
             })}
           </div>
+          {showResult && round.winner && (
+            <div className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-xp animate-fade-in">
+              <Zap className="h-3 w-3" /> Round winner: {round.winner === user?.id ? "You" : opp?.display_name ?? "Opponent"}
+            </div>
+          )}
         </div>
       )}
 
