@@ -51,7 +51,7 @@ function SettingsPage() {
     if (!user) return;
     const next = { ...prefs, [key]: !prefs[key] };
     setPrefs(next);
-    await supabase.from("notification_prefs").update({ [key]: next[key] }).eq("user_id", user.id);
+    await supabase.from("notification_prefs").update({ [key]: next[key] } as any).eq("user_id", user.id);
   };
 
   const askPush = async () => {
