@@ -326,26 +326,44 @@ export type Database = {
         Row: {
           content: string
           created_at: string
+          duration_ms: number | null
           id: string
+          kind: Database["public"]["Enums"]["message_kind"]
+          media_mime: string | null
+          media_size: number | null
+          media_url: string | null
           read: boolean
           recipient_id: string
           sender_id: string
+          viewed_at: string | null
         }
         Insert: {
           content: string
           created_at?: string
+          duration_ms?: number | null
           id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          media_mime?: string | null
+          media_size?: number | null
+          media_url?: string | null
           read?: boolean
           recipient_id: string
           sender_id: string
+          viewed_at?: string | null
         }
         Update: {
           content?: string
           created_at?: string
+          duration_ms?: number | null
           id?: string
+          kind?: Database["public"]["Enums"]["message_kind"]
+          media_mime?: string | null
+          media_size?: number | null
+          media_url?: string | null
           read?: boolean
           recipient_id?: string
           sender_id?: string
+          viewed_at?: string | null
         }
         Relationships: []
       }
@@ -492,7 +510,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar: string
+          avatar_url: string | null
           bio: string | null
+          chat_bg_url: string | null
           created_at: string
           display_name: string
           grade: string | null
@@ -510,7 +530,9 @@ export type Database = {
         }
         Insert: {
           avatar?: string
+          avatar_url?: string | null
           bio?: string | null
+          chat_bg_url?: string | null
           created_at?: string
           display_name: string
           grade?: string | null
@@ -528,7 +550,9 @@ export type Database = {
         }
         Update: {
           avatar?: string
+          avatar_url?: string | null
           bio?: string | null
+          chat_bg_url?: string | null
           created_at?: string
           display_name?: string
           grade?: string | null
@@ -643,6 +667,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advance_duel: { Args: { _duel_id: string }; Returns: undefined }
       award_xp: {
         Args: { _amount: number; _reason: string; _user_id: string }
         Returns: undefined
@@ -650,6 +675,7 @@ export type Database = {
       finish_duel: { Args: { _duel_id: string }; Returns: undefined }
       join_duel_queue: { Args: never; Returns: Json }
       refresh_school_leaderboard: { Args: never; Returns: undefined }
+      resolve_duel_round: { Args: { _round_id: string }; Returns: undefined }
       solve_challenge: {
         Args: { _answer: string; _challenge_id: string; _time_taken_ms: number }
         Returns: Json
@@ -658,6 +684,7 @@ export type Database = {
     Enums: {
       difficulty: "easy" | "medium" | "hard"
       duel_status: "waiting" | "active" | "finished" | "cancelled"
+      message_kind: "text" | "image" | "video" | "file" | "voice" | "view_once"
       notif_type:
         | "challenge_invite"
         | "duel_invite"
@@ -799,6 +826,7 @@ export const Constants = {
     Enums: {
       difficulty: ["easy", "medium", "hard"],
       duel_status: ["waiting", "active", "finished", "cancelled"],
+      message_kind: ["text", "image", "video", "file", "voice", "view_once"],
       notif_type: [
         "challenge_invite",
         "duel_invite",
