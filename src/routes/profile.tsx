@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { Flame, LogOut, Instagram, Settings, Plus, Grid3x3, Zap, Swords, Trophy } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Flame, LogOut, Instagram, Settings, Plus, Grid3x3, Zap, Swords, Trophy, Camera } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth, levelProgress } from "@/lib/auth";
 import { fetchUserPosts } from "@/lib/feed";
 import type { FeedPost } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { PostCard } from "@/components/post-card";
+import { uploadAvatar } from "@/lib/upload";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   component: ProfilePage,
