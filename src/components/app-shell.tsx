@@ -1,10 +1,12 @@
 import { ReactNode } from "react";
+import { DoodleBg } from "./doodle-bg";
 
 export function AppShell({ children, title }: { children: ReactNode; title?: ReactNode }) {
   return (
-    <div className="mx-auto min-h-screen max-w-xl pb-28">
+    <div className="relative mx-auto min-h-screen max-w-xl pb-28">
+      <DoodleBg />
       {title && (
-        <header className="glass sticky top-0 z-40 flex items-center justify-between px-4 py-3">
+        <header className="glass sticky top-0 z-40 flex items-center justify-between gap-2 px-4 py-3">
           {title}
         </header>
       )}

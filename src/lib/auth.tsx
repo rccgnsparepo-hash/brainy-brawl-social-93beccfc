@@ -8,6 +8,8 @@ export type Profile = {
   display_name: string;
   school: string;
   avatar: string;
+  avatar_url: string | null;
+  chat_bg_url: string | null;
   grade: string | null;
   bio: string | null;
   instagram: string | null;

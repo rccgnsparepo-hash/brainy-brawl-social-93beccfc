@@ -15,11 +15,13 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExploreRouteImport } from './routes/explore'
 import { Route as CreateRouteImport } from './routes/create'
-import { Route as ChatsRouteImport } from './routes/chats'
 import { Route as ArenaRouteImport } from './routes/arena'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatsIndexRouteImport } from './routes/chats.index'
+import { Route as RecapDuelIdRouteImport } from './routes/recap.$duelId'
 import { Route as DuelDuelIdRouteImport } from './routes/duel.$duelId'
 import { Route as ChatsUserIdRouteImport } from './routes/chats.$userId'
+import { Route as CallPeerIdRouteImport } from './routes/call.$peerId'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -51,11 +53,6 @@ const CreateRoute = CreateRouteImport.update({
   path: '/create',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ChatsRoute = ChatsRouteImport.update({
-  id: '/chats',
-  path: '/chats',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ArenaRoute = ArenaRouteImport.update({
   id: '/arena',
   path: '/arena',
@@ -66,110 +63,140 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatsIndexRoute = ChatsIndexRouteImport.update({
+  id: '/chats/',
+  path: '/chats/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecapDuelIdRoute = RecapDuelIdRouteImport.update({
+  id: '/recap/$duelId',
+  path: '/recap/$duelId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DuelDuelIdRoute = DuelDuelIdRouteImport.update({
   id: '/duel/$duelId',
   path: '/duel/$duelId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatsUserIdRoute = ChatsUserIdRouteImport.update({
-  id: '/$userId',
-  path: '/$userId',
-  getParentRoute: () => ChatsRoute,
+  id: '/chats/$userId',
+  path: '/chats/$userId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CallPeerIdRoute = CallPeerIdRouteImport.update({
+  id: '/call/$peerId',
+  path: '/call/$peerId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
-  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/call/$peerId': typeof CallPeerIdRoute
   '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
+  '/recap/$duelId': typeof RecapDuelIdRoute
+  '/chats/': typeof ChatsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
-  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/call/$peerId': typeof CallPeerIdRoute
   '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
+  '/recap/$duelId': typeof RecapDuelIdRoute
+  '/chats': typeof ChatsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/arena': typeof ArenaRoute
-  '/chats': typeof ChatsRouteWithChildren
   '/create': typeof CreateRoute
   '/explore': typeof ExploreRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/settings': typeof SettingsRoute
   '/signup': typeof SignupRoute
+  '/call/$peerId': typeof CallPeerIdRoute
   '/chats/$userId': typeof ChatsUserIdRoute
   '/duel/$duelId': typeof DuelDuelIdRoute
+  '/recap/$duelId': typeof RecapDuelIdRoute
+  '/chats/': typeof ChatsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/arena'
-    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
     | '/settings'
     | '/signup'
+    | '/call/$peerId'
     | '/chats/$userId'
     | '/duel/$duelId'
+    | '/recap/$duelId'
+    | '/chats/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/arena'
-    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
     | '/settings'
     | '/signup'
+    | '/call/$peerId'
     | '/chats/$userId'
     | '/duel/$duelId'
+    | '/recap/$duelId'
+    | '/chats'
   id:
     | '__root__'
     | '/'
     | '/arena'
-    | '/chats'
     | '/create'
     | '/explore'
     | '/login'
     | '/profile'
     | '/settings'
     | '/signup'
+    | '/call/$peerId'
     | '/chats/$userId'
     | '/duel/$duelId'
+    | '/recap/$duelId'
+    | '/chats/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ArenaRoute: typeof ArenaRoute
-  ChatsRoute: typeof ChatsRouteWithChildren
   CreateRoute: typeof CreateRoute
   ExploreRoute: typeof ExploreRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  CallPeerIdRoute: typeof CallPeerIdRoute
+  ChatsUserIdRoute: typeof ChatsUserIdRoute
   DuelDuelIdRoute: typeof DuelDuelIdRoute
+  RecapDuelIdRoute: typeof RecapDuelIdRoute
+  ChatsIndexRoute: typeof ChatsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -216,13 +243,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CreateRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/chats': {
-      id: '/chats'
-      path: '/chats'
-      fullPath: '/chats'
-      preLoaderRoute: typeof ChatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/arena': {
       id: '/arena'
       path: '/arena'
@@ -237,6 +257,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chats/': {
+      id: '/chats/'
+      path: '/chats'
+      fullPath: '/chats/'
+      preLoaderRoute: typeof ChatsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recap/$duelId': {
+      id: '/recap/$duelId'
+      path: '/recap/$duelId'
+      fullPath: '/recap/$duelId'
+      preLoaderRoute: typeof RecapDuelIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/duel/$duelId': {
       id: '/duel/$duelId'
       path: '/duel/$duelId'
@@ -246,46 +280,36 @@ declare module '@tanstack/react-router' {
     }
     '/chats/$userId': {
       id: '/chats/$userId'
-      path: '/$userId'
+      path: '/chats/$userId'
       fullPath: '/chats/$userId'
       preLoaderRoute: typeof ChatsUserIdRouteImport
-      parentRoute: typeof ChatsRoute
+      parentRoute: typeof rootRouteImport
+    }
+    '/call/$peerId': {
+      id: '/call/$peerId'
+      path: '/call/$peerId'
+      fullPath: '/call/$peerId'
+      preLoaderRoute: typeof CallPeerIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface ChatsRouteChildren {
-  ChatsUserIdRoute: typeof ChatsUserIdRoute
-}
-
-const ChatsRouteChildren: ChatsRouteChildren = {
-  ChatsUserIdRoute: ChatsUserIdRoute,
-}
-
-const ChatsRouteWithChildren = ChatsRoute._addFileChildren(ChatsRouteChildren)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ArenaRoute: ArenaRoute,
-  ChatsRoute: ChatsRouteWithChildren,
   CreateRoute: CreateRoute,
   ExploreRoute: ExploreRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  CallPeerIdRoute: CallPeerIdRoute,
+  ChatsUserIdRoute: ChatsUserIdRoute,
   DuelDuelIdRoute: DuelDuelIdRoute,
+  RecapDuelIdRoute: RecapDuelIdRoute,
+  ChatsIndexRoute: ChatsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

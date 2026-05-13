@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Swords, Clock, Trophy, ArrowLeft, Zap } from "lucide-react";
@@ -18,15 +18,16 @@ const QUESTION_BANK = [
   { question: "H₂O is?", options: ["Salt", "Water", "Oxygen", "Acid"], answer: "Water" },
   { question: "15% of 200?", options: ["20", "25", "30", "35"], answer: "30" },
   { question: "Largest planet?", options: ["Saturn", "Mars", "Jupiter", "Earth"], answer: "Jupiter" },
-  { question: "Who painted Mona Lisa?", options: ["Van Gogh", "Da Vinci", "Picasso", "Monet"], answer: "Da Vinci" },
+  { question: "Mona Lisa painter?", options: ["Van Gogh", "Da Vinci", "Picasso", "Monet"], answer: "Da Vinci" },
   { question: "Speed of light (km/s)?", options: ["150,000", "300,000", "450,000", "600,000"], answer: "300,000" },
   { question: "Smallest prime?", options: ["0", "1", "2", "3"], answer: "2" },
   { question: "Currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], answer: "Yen" },
   { question: "DNA stands for?", options: ["Deoxyribonucleic Acid", "Diatomic Nucleic Acid", "Dual Nuclear Acid", "Direct Nano Acid"], answer: "Deoxyribonucleic Acid" },
   { question: "9² + 4² = ?", options: ["97", "85", "100", "81"], answer: "97" },
-  { question: "Who wrote Hamlet?", options: ["Dickens", "Shakespeare", "Twain", "Austen"], answer: "Shakespeare" },
+  { question: "Hamlet author?", options: ["Dickens", "Shakespeare", "Twain", "Austen"], answer: "Shakespeare" },
   { question: "Continent of Egypt?", options: ["Asia", "Europe", "Africa", "Oceania"], answer: "Africa" },
 ];
+const ROUND_SECONDS = 15;
 
 function DuelPage() {
   const { duelId } = Route.useParams();
@@ -35,94 +36,118 @@ function DuelPage() {
   const [duel, setDuel] = useState<any>(null);
   const [round, setRound] = useState<any>(null);
   const [picked, setPicked] = useState<string | null>(null);
-  const [timeLeft, setTimeLeft] = useState(15);
-  const startedAtRef = useRef<number>(Date.now());
-  const ROUND_SECONDS = 15;
+  const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const resolvedRef = useRef<Set<string>>(new Set());
+  const advancingRef = useRef<Set<number>>(new Set());
 
-  const isA = user?.id === duel?.player_a;
+  const isA = !!(user && duel && user.id === duel.player_a);
 
-  const loadDuel = async () => {
+  const loadDuel = useCallback(async () => {
     const { data } = await supabase
       .from("duels")
-      .select(`*, a:profiles!duels_player_a_fkey(handle,display_name,avatar), b:profiles!duels_player_b_fkey(handle,display_name,avatar)`)
+      .select(`*, a:profiles!duels_player_a_fkey(handle,display_name,avatar,avatar_url), b:profiles!duels_player_b_fkey(handle,display_name,avatar,avatar_url)`)
       .eq("id", duelId)
       .maybeSingle();
     setDuel(data);
-  };
+    return data;
+  }, [duelId]);
 
-  const loadCurrentRound = async (d?: any) => {
-    const cur = d ?? duel;
-    if (!cur || cur.status !== "active") return;
+  const loadCurrentRound = useCallback(async (cur?: any) => {
+    const d = cur ?? duel;
+    if (!d || d.status !== "active") return;
     const { data } = await supabase
       .from("duel_rounds")
       .select("*")
       .eq("duel_id", duelId)
-      .eq("round_number", cur.current_round)
+      .eq("round_number", d.current_round)
       .maybeSingle();
     if (data) {
       setRound(data);
       const myAns = isA ? data.answer_a : data.answer_b;
-      setPicked(myAns);
-      if (!myAns) startedAtRef.current = Date.now();
-    } else if (cur.current_round === 0 && user?.id === cur.player_a) {
-      await advanceRound(cur, 1);
+      setPicked(myAns ?? null);
+    } else if (d.current_round === 0 && user?.id === d.player_a) {
+      // first round — only player_a seeds it
+      const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+      await supabase.from("duel_rounds").insert({
+        duel_id: duelId, round_number: 1, question: q.question, options: q.options, answer: q.answer,
+      });
+      await supabase.from("duels").update({ current_round: 1 }).eq("id", duelId);
     }
-  };
+  }, [duel, duelId, isA, user?.id]);
 
-  const advanceRound = async (cur: any, n: number) => {
-    if (n > cur.total_rounds) {
-      await supabase.rpc("finish_duel", { _duel_id: duelId });
-      return;
-    }
-    const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
-    await supabase.from("duel_rounds").insert({
-      duel_id: duelId,
-      round_number: n,
-      question: q.question,
-      options: q.options,
-      answer: q.answer,
-    });
-    await supabase.from("duels").update({ current_round: n }).eq("id", duelId);
-  };
-
+  // Subscribe
   useEffect(() => {
     loadDuel();
     const ch = supabase
       .channel(`duel-${duelId}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "duels", filter: `id=eq.${duelId}` }, (p) => {
-        const newDuel = p.new as any;
-        setDuel((d: any) => ({ ...(d ?? {}), ...newDuel }));
+        setDuel((d: any) => ({ ...(d ?? {}), ...(p.new as any) }));
       })
-      .on("postgres_changes", { event: "*", schema: "public", table: "duel_rounds", filter: `duel_id=eq.${duelId}` }, () => loadCurrentRound())
+      .on("postgres_changes", { event: "*", schema: "public", table: "duel_rounds", filter: `duel_id=eq.${duelId}` }, (p) => {
+        const r = p.new as any;
+        if (!r) return;
+        setRound((cur: any) => (cur && cur.id === r.id ? { ...cur, ...r } : cur ?? r));
+      })
       .subscribe();
-    return () => {
-      supabase.removeChannel(ch);
-    };
-  }, [duelId]);
+    return () => { supabase.removeChannel(ch); };
+  }, [duelId, loadDuel]);
 
+  // When duel.current_round changes, load that round and reset timer
   useEffect(() => {
-    if (duel) loadCurrentRound(duel);
+    if (!duel) return;
+    setRound(null);
+    setPicked(null);
     setTimeLeft(ROUND_SECONDS);
-  }, [duel?.current_round, duel?.status]);
+    loadCurrentRound(duel);
+  }, [duel?.current_round, duel?.status, loadCurrentRound, duel]);
 
-  // Round timer
+  // Round timer (server-authoritative resolve when timer ends)
   useEffect(() => {
-    if (!round || duel?.status !== "active" || round.winner) return;
+    if (!round || duel?.status !== "active" || round.winner !== null) return;
+    setTimeLeft(ROUND_SECONDS);
     const t = setInterval(() => {
       setTimeLeft((s) => {
         if (s <= 1) {
           clearInterval(t);
-          resolveRound();
+          // Server resolves — no waiting on opponent
+          (async () => {
+            await supabase.rpc("resolve_duel_round", { _round_id: round.id });
+            // player_a is the round-master who advances + seeds the next round
+            if (user?.id === duel.player_a && !advancingRef.current.has(round.round_number)) {
+              advancingRef.current.add(round.round_number);
+              setTimeout(async () => {
+                const next = round.round_number + 1;
+                if (next > duel.total_rounds) {
+                  await supabase.rpc("finish_duel", { _duel_id: duelId });
+                } else {
+                  const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
+                  await supabase.from("duel_rounds").insert({
+                    duel_id: duelId, round_number: next, question: q.question, options: q.options, answer: q.answer,
+                  });
+                  await supabase.from("duels").update({ current_round: next }).eq("id", duelId);
+                }
+              }, 1200);
+            }
+          })();
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => clearInterval(t);
-  }, [round?.id]);
+  }, [round?.id, duel?.status, duel?.player_a, duel?.total_rounds, user?.id, duelId, round?.round_number, round?.winner]);
+
+  // Early-resolve when both have answered
+  useEffect(() => {
+    if (!round || round.winner !== null) return;
+    if (round.answer_a && round.answer_b && !resolvedRef.current.has(round.id)) {
+      resolvedRef.current.add(round.id);
+      supabase.rpc("resolve_duel_round", { _round_id: round.id });
+    }
+  }, [round?.answer_a, round?.answer_b, round?.id, round?.winner, round]);
 
   const submitAnswer = async (opt: string) => {
-    if (!round || picked) return;
+    if (!round || picked || round.winner !== null) return;
     setPicked(opt);
     const patch = isA
       ? { answer_a: opt, answered_at_a: new Date().toISOString() }
@@ -130,60 +155,19 @@ function DuelPage() {
     await supabase.from("duel_rounds").update(patch).eq("id", round.id);
   };
 
-  const resolveRound = async () => {
-    if (!round || !duel) return;
-    const { data: fresh } = await supabase.from("duel_rounds").select("*").eq("id", round.id).maybeSingle();
-    if (!fresh || fresh.winner) return;
-    const aRight = fresh.answer_a === fresh.answer;
-    const bRight = fresh.answer_b === fresh.answer;
-    let winner: string | null = null;
-    let dScoreA = 0, dScoreB = 0;
-    if (aRight && bRight) {
-      // fastest correct answer wins the round
-      const ta = fresh.answered_at_a ? new Date(fresh.answered_at_a).getTime() : Infinity;
-      const tb = fresh.answered_at_b ? new Date(fresh.answered_at_b).getTime() : Infinity;
-      if (ta < tb) { winner = duel.player_a; dScoreA = 1; }
-      else if (tb < ta) { winner = duel.player_b; dScoreB = 1; }
-      else { dScoreA = 1; dScoreB = 1; }
-    } else if (aRight) { winner = duel.player_a; dScoreA = 1; }
-    else if (bRight) { winner = duel.player_b; dScoreB = 1; }
-
-    await supabase.from("duel_rounds").update({ winner }).eq("id", fresh.id);
-    if (dScoreA || dScoreB) {
-      await supabase.from("duels").update({
-        score_a: duel.score_a + dScoreA,
-        score_b: duel.score_b + dScoreB,
-      }).eq("id", duelId);
-    }
-    if (user?.id === duel.player_a) {
-      setTimeout(() => advanceRound({ ...duel, score_a: duel.score_a + dScoreA, score_b: duel.score_b + dScoreB }, duel.current_round + 1), 1500);
-    }
-  };
-
-  // Auto-resolve when both answered
-  useEffect(() => {
-    if (round && round.answer_a && round.answer_b && !round.winner) {
-      resolveRound();
-    }
-  }, [round?.answer_a, round?.answer_b]);
-
   if (!duel) return <div className="p-8 text-center text-muted-foreground">Loading duel…</div>;
 
   const me = isA ? duel.a : duel.b;
   const opp = isA ? duel.b : duel.a;
   const myScore = isA ? duel.score_a : duel.score_b;
   const oppScore = isA ? duel.score_b : duel.score_a;
-  const won = duel.winner_id === user?.id;
-  const draw = duel.status === "finished" && !duel.winner_id;
-  const showResult = round && (round.winner !== null || (round.answer_a && round.answer_b));
+  const showResult = round && round.winner !== null;
 
   return (
     <AppShell
       title={
         <>
-          <button onClick={() => nav({ to: "/arena" })} className="rounded-full glass p-2">
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+          <button onClick={() => nav({ to: "/arena" })} className="rounded-full glass p-2"><ArrowLeft className="h-4 w-4" /></button>
           <div className="font-display font-bold">Live Duel</div>
           <div className="rounded-full bg-destructive/15 px-2 py-1 text-[10px] font-semibold uppercase text-destructive">Live</div>
         </>
@@ -191,9 +175,9 @@ function DuelPage() {
     >
       <div className="glass rounded-2xl p-4">
         <div className="flex items-center justify-between">
-          <PlayerCard avatar={me?.avatar} name={me?.display_name ?? "You"} score={myScore} />
+          <PlayerCard p={me} score={myScore} you />
           <Swords className="h-6 w-6 text-neon-purple" />
-          <PlayerCard avatar={opp?.avatar} name={opp?.display_name ?? "Waiting…"} score={oppScore} reverse />
+          <PlayerCard p={opp} score={oppScore} reverse />
         </div>
         <div className="mt-3 text-center text-xs text-muted-foreground">
           Round {Math.max(1, duel.current_round)} / {duel.total_rounds}
@@ -204,9 +188,7 @@ function DuelPage() {
         <div className="mt-4 glass-strong rounded-2xl p-5 animate-fade-in">
           <div className="mb-3 flex items-center justify-between text-xs">
             <span className="rounded-full bg-secondary px-2 py-0.5 font-semibold uppercase">Round {round.round_number}</span>
-            <span className="flex items-center gap-1 text-warning">
-              <Clock className="h-3 w-3" /> {timeLeft}s
-            </span>
+            <span className="flex items-center gap-1 text-warning"><Clock className="h-3 w-3" /> {timeLeft}s</span>
           </div>
           <p className="mb-4 text-lg font-semibold">{round.question}</p>
           <div className="grid grid-cols-2 gap-2">
@@ -220,13 +202,10 @@ function DuelPage() {
                   disabled={!!picked || showResult}
                   onClick={() => submitAnswer(opt)}
                   className={`rounded-xl border px-3 py-3 text-sm font-semibold transition-all ${
-                    isCorrect
-                      ? "border-success bg-success/15 text-success"
-                      : isWrongPick
-                        ? "border-destructive bg-destructive/15 text-destructive"
-                        : isPicked
-                          ? "border-neon-purple bg-neon-purple/15"
-                          : "border-glass-border bg-secondary/40 hover:border-neon-purple"
+                    isCorrect ? "border-success bg-success/15 text-success"
+                    : isWrongPick ? "border-destructive bg-destructive/15 text-destructive"
+                    : isPicked ? "border-neon-purple bg-neon-purple/15"
+                    : "border-glass-border bg-secondary/40 hover:border-neon-purple"
                   } disabled:opacity-70`}
                 >
                   {opt}
@@ -234,9 +213,12 @@ function DuelPage() {
               );
             })}
           </div>
-          {showResult && round.winner && (
+          {picked && !showResult && (
+            <div className="mt-3 text-center text-xs text-muted-foreground">Locked in. Waiting on timer or opponent…</div>
+          )}
+          {showResult && (
             <div className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-xp animate-fade-in">
-              <Zap className="h-3 w-3" /> Round winner: {round.winner === user?.id ? "You" : opp?.display_name ?? "Opponent"}
+              <Zap className="h-3 w-3" /> Round winner: {round.winner ? (round.winner === user?.id ? "You" : opp?.display_name ?? "Opponent") : "Tie"}
             </div>
           )}
         </div>
@@ -244,15 +226,19 @@ function DuelPage() {
 
       {duel.status === "finished" && (
         <div className="mt-4 glass-strong rounded-3xl p-6 text-center animate-fade-in">
-          <Trophy className={`mx-auto h-12 w-12 ${won ? "text-xp" : "text-muted-foreground"}`} />
-          <div className="mt-2 font-display text-2xl font-bold">{draw ? "Draw" : won ? "Victory!" : "Defeat"}</div>
-          <div className="mt-1 text-sm text-muted-foreground">
-            Final {myScore} - {oppScore}
+          <Trophy className={`mx-auto h-12 w-12 ${duel.winner_id === user?.id ? "text-xp" : "text-muted-foreground"}`} />
+          <div className="mt-2 font-display text-2xl font-bold">
+            {!duel.winner_id ? "Draw" : duel.winner_id === user?.id ? "Victory!" : "Defeat"}
           </div>
-          {won && <div className="mt-2 text-xp font-bold">+50 XP</div>}
-          <button onClick={() => nav({ to: "/arena" })} className="mt-4 rounded-full gradient-primary px-6 py-2 text-sm font-bold text-primary-foreground">
-            Back to Arena
-          </button>
+          <div className="mt-1 text-sm text-muted-foreground">Final {myScore} - {oppScore}</div>
+          <div className="mt-4 flex gap-2">
+            <button onClick={() => nav({ to: "/recap/$duelId", params: { duelId } })} className="flex-1 rounded-full gradient-primary px-6 py-2 text-sm font-bold text-primary-foreground">
+              View recap
+            </button>
+            <button onClick={() => nav({ to: "/arena" })} className="flex-1 rounded-full glass-strong px-6 py-2 text-sm font-bold">
+              Arena
+            </button>
+          </div>
         </div>
       )}
 
@@ -263,13 +249,15 @@ function DuelPage() {
   );
 }
 
-function PlayerCard({ avatar, name, score, reverse }: { avatar?: string; name: string; score: number; reverse?: boolean }) {
+function PlayerCard({ p, score, reverse, you }: { p: any; score: number; reverse?: boolean; you?: boolean }) {
   return (
     <div className={`flex flex-1 items-center gap-2 ${reverse ? "flex-row-reverse text-right" : ""}`}>
-      <div className="flex h-12 w-12 items-center justify-center rounded-full gradient-primary text-2xl">{avatar ?? "👤"}</div>
+      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full gradient-primary text-2xl">
+        {p?.avatar_url ? <img src={p.avatar_url} alt="" className="h-full w-full object-cover" /> : (p?.avatar ?? "👤")}
+      </div>
       <div>
-        <div className="text-xs text-muted-foreground">{reverse ? "Opponent" : "You"}</div>
-        <div className="truncate text-sm font-semibold">{name}</div>
+        <div className="text-xs text-muted-foreground">{you ? "You" : "Opponent"}</div>
+        <div className="truncate text-sm font-semibold">{p?.display_name ?? "Waiting…"}</div>
         <div className="font-display text-lg font-bold text-gradient">{score}</div>
       </div>
     </div>
