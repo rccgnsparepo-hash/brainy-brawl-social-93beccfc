@@ -72,9 +72,9 @@ const DuelDuelIdRoute = DuelDuelIdRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatsUserIdRoute = ChatsUserIdRouteImport.update({
-  id: '/$userId',
-  path: '/$userId',
-  getParentRoute: () => ChatsRoute,
+  id: '/chats/$userId',
+  path: '/chats/$userId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -168,6 +168,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   SettingsRoute: typeof SettingsRoute
   SignupRoute: typeof SignupRoute
+  ChatsUserIdRoute: typeof ChatsUserIdRoute
   DuelDuelIdRoute: typeof DuelDuelIdRoute
   ChatsIndexRoute: typeof ChatsIndexRoute
 }
@@ -246,10 +247,10 @@ declare module '@tanstack/react-router' {
     }
     '/chats/$userId': {
       id: '/chats/$userId'
-      path: '/$userId'
+      path: '/chats/$userId'
       fullPath: '/chats/$userId'
       preLoaderRoute: typeof ChatsUserIdRouteImport
-      parentRoute: typeof ChatsRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -263,19 +264,10 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   SettingsRoute: SettingsRoute,
   SignupRoute: SignupRoute,
+  ChatsUserIdRoute: ChatsUserIdRoute,
   DuelDuelIdRoute: DuelDuelIdRoute,
   ChatsIndexRoute: ChatsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
