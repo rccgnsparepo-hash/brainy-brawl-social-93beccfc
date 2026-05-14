@@ -754,6 +754,10 @@ export type Database = {
     }
     Functions: {
       advance_duel: { Args: { _duel_id: string }; Returns: undefined }
+      advance_duel_from_round: {
+        Args: { _duel_id: string; _round_number: number }
+        Returns: undefined
+      }
       award_xp: {
         Args: { _amount: number; _reason: string; _user_id: string }
         Returns: undefined
@@ -762,7 +766,12 @@ export type Database = {
       join_duel_queue: { Args: never; Returns: Json }
       refresh_school_leaderboard: { Args: never; Returns: undefined }
       resolve_duel_round: { Args: { _round_id: string }; Returns: undefined }
-      seed_duel_round: { Args: { _duel_id: string }; Returns: string }
+      seed_duel_round:
+        | { Args: { _duel_id: string }; Returns: string }
+        | {
+            Args: { _duel_id: string; _round_number?: number }
+            Returns: string
+          }
       solve_challenge: {
         Args: { _answer: string; _challenge_id: string; _time_taken_ms: number }
         Returns: Json
