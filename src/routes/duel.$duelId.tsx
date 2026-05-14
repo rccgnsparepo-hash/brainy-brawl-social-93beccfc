@@ -20,6 +20,7 @@ function DuelPage() {
   const [round, setRound] = useState<any>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const [intro, setIntro] = useState<"3" | "2" | "1" | "Fight!!" | "Final Round" | null>(null);
   const resolvedRef = useRef<Set<string>>(new Set());
   const advancingRef = useRef<Set<number>>(new Set());
 
@@ -49,12 +50,7 @@ function DuelPage() {
       const myAns = isA ? data.answer_a : data.answer_b;
       setPicked(myAns ?? null);
     } else if (d.current_round === 0 && user?.id === d.player_a) {
-      // first round — only player_a seeds it
-      const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
-      await supabase.from("duel_rounds").insert({
-        duel_id: duelId, round_number: 1, question: q.question, options: q.options, answer: q.answer,
-      });
-      await supabase.from("duels").update({ current_round: 1 }).eq("id", duelId);
+      await supabase.rpc("seed_duel_round", { _duel_id: duelId, _round_number: 1 });
     }
   }, [duel, duelId, isA, user?.id]);
 
@@ -103,11 +99,7 @@ function DuelPage() {
                 if (next > duel.total_rounds) {
                   await supabase.rpc("finish_duel", { _duel_id: duelId });
                 } else {
-                  const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
-                  await supabase.from("duel_rounds").insert({
-                    duel_id: duelId, round_number: next, question: q.question, options: q.options, answer: q.answer,
-                  });
-                  await supabase.from("duels").update({ current_round: next }).eq("id", duelId);
+                  await supabase.rpc("advance_duel_from_round", { _duel_id: duelId, _round_number: round.round_number });
                 }
               }, 1200);
             }
