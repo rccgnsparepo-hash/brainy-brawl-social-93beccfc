@@ -181,6 +181,10 @@
 
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; }
+
+  .animate-fighter-left { animation: fighter-left 0.52s ease-in-out infinite alternate; }
+  .animate-fighter-right { animation: fighter-right 0.52s ease-in-out infinite alternate; }
+  .animate-charge { animation: charge 0.42s ease-in-out infinite alternate; }
 }
 
 @keyframes pop {
@@ -204,4 +208,16 @@
   0% { opacity: 0; transform: translateY(0) scale(0.8); }
   30% { opacity: 1; transform: translateY(-20px) scale(1.1); }
   100% { opacity: 0; transform: translateY(-60px) scale(1); }
+}
+@keyframes fighter-left {
+  0% { transform: translateX(0) skewY(-8deg) scale(1); }
+  100% { transform: translateX(28px) skewY(8deg) scale(1.05); }
+}
+@keyframes fighter-right {
+  0% { transform: translateX(0) skewY(8deg) scale(1); }
+  100% { transform: translateX(-28px) skewY(-8deg) scale(1.05); }
+}
+@keyframes charge {
+  0% { opacity: 0.35; transform: scale(0.8); }
+  100% { opacity: 0.9; transform: scale(1.35); }
 }
