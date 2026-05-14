@@ -142,6 +142,75 @@ export type Database = {
           },
         ]
       }
+      duel_question_usage: {
+        Row: {
+          created_at: string
+          duel_id: string
+          question_id: string
+          round_number: number
+        }
+        Insert: {
+          created_at?: string
+          duel_id: string
+          question_id: string
+          round_number: number
+        }
+        Update: {
+          created_at?: string
+          duel_id?: string
+          question_id?: string
+          round_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "duel_question_usage_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "duels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "duel_question_usage_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "duel_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      duel_questions: {
+        Row: {
+          answer: string
+          category: string
+          created_at: string
+          difficulty: Database["public"]["Enums"]["difficulty"]
+          id: string
+          options: string[]
+          question: string
+          used_count: number
+        }
+        Insert: {
+          answer: string
+          category?: string
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["difficulty"]
+          id?: string
+          options: string[]
+          question: string
+          used_count?: number
+        }
+        Update: {
+          answer?: string
+          category?: string
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["difficulty"]
+          id?: string
+          options?: string[]
+          question?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
       duel_queue: {
         Row: {
           joined_at: string
@@ -499,6 +568,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "posts_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_duel_id_fkey"
+            columns: ["duel_id"]
+            isOneToOne: false
+            referencedRelation: "duels"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "posts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
@@ -520,6 +603,7 @@ export type Database = {
           id: string
           instagram: string | null
           last_active_date: string | null
+          last_seen_at: string | null
           level: number
           losses: number
           school: string
@@ -540,6 +624,7 @@ export type Database = {
           id: string
           instagram?: string | null
           last_active_date?: string | null
+          last_seen_at?: string | null
           level?: number
           losses?: number
           school: string
@@ -560,6 +645,7 @@ export type Database = {
           id?: string
           instagram?: string | null
           last_active_date?: string | null
+          last_seen_at?: string | null
           level?: number
           losses?: number
           school?: string
@@ -676,10 +762,12 @@ export type Database = {
       join_duel_queue: { Args: never; Returns: Json }
       refresh_school_leaderboard: { Args: never; Returns: undefined }
       resolve_duel_round: { Args: { _round_id: string }; Returns: undefined }
+      seed_duel_round: { Args: { _duel_id: string }; Returns: string }
       solve_challenge: {
         Args: { _answer: string; _challenge_id: string; _time_taken_ms: number }
         Returns: Json
       }
+      touch_presence: { Args: never; Returns: undefined }
     }
     Enums: {
       difficulty: "easy" | "medium" | "hard"
