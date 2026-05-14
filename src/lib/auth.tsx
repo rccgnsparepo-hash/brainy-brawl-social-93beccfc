@@ -19,6 +19,7 @@ export type Profile = {
   wins: number;
   losses: number;
   last_active_date: string | null;
+  last_seen_at: string | null;
 };
 
 interface AuthCtx {
@@ -84,6 +85,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.removeChannel(ch);
     };
   }, [user]);
+
+  // Presence heartbeat for active-only duel matchmaking.
+  useEffect(() => {
+    if (!user) return;
+    const touch = () => {
+      if (document.visibilityState === "visible") {
+        supabase.rpc("touch_presence").then(() => {});
+      }
+    };
+    touch();
+    const interval = window.setInterval(touch, 20_000);
+    document.addEventListener("visibilitychange", touch);
+    window.addEventListener("focus", touch);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", touch);
+      window.removeEventListener("focus", touch);
+    };
+  }, [user?.id]);
 
   return (
     <Ctx.Provider
