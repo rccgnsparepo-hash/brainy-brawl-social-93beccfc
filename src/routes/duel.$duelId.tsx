@@ -77,6 +77,11 @@ function DuelPage() {
     setRound(null);
     setPicked(null);
     setTimeLeft(ROUND_SECONDS);
+    if (duel.status === "active") {
+      const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
+      sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
+      window.setTimeout(() => setIntro(null), sequence.length * 520);
+    }
     loadCurrentRound(duel);
   }, [duel?.current_round, duel?.status, loadCurrentRound, duel]);
 
@@ -148,6 +153,8 @@ function DuelPage() {
         </>
       }
     >
+      {intro && <FighterOverlay text={intro} final={intro === "Final Round"} />}
+
       <div className="glass rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <PlayerCard p={me} score={myScore} you />
