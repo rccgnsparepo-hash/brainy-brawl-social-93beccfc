@@ -119,7 +119,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const showNav = pathname !== "/login" && pathname !== "/signup";
+  const showNav = pathname !== "/login" && pathname !== "/signup" && !pathname.startsWith("/chats/") && !pathname.startsWith("/call/");
 
   return (
     <QueryClientProvider client={queryClient}>
