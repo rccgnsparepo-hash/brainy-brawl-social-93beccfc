@@ -8,7 +8,7 @@ export async function fetchFeed(currentUserId: string | null): Promise<FeedPost[
       `id, user_id, type, content, challenge_id, duel_id, achievement_title, achievement_icon,
        likes_count, comments_count, reposts_count, created_at,
        profile:profiles!posts_user_id_fkey ( id, handle, display_name, avatar, school, level ),
-       challenge:challenges ( id, question, answer, options, time_limit, reward_xp, difficulty, solved_count )`,
+       challenge:challenges!posts_challenge_id_fkey ( id, question, answer, options, time_limit, reward_xp, difficulty, solved_count )`,
     )
     .order("created_at", { ascending: false })
     .limit(50);
@@ -41,7 +41,7 @@ export async function fetchUserPosts(userId: string): Promise<FeedPost[]> {
       `id, user_id, type, content, challenge_id, duel_id, achievement_title, achievement_icon,
        likes_count, comments_count, reposts_count, created_at,
        profile:profiles!posts_user_id_fkey ( id, handle, display_name, avatar, school, level ),
-       challenge:challenges ( id, question, answer, options, time_limit, reward_xp, difficulty, solved_count )`,
+       challenge:challenges!posts_challenge_id_fkey ( id, question, answer, options, time_limit, reward_xp, difficulty, solved_count )`,
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
