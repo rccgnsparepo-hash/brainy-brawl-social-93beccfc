@@ -10,24 +10,7 @@ export const Route = createFileRoute("/duel/$duelId")({
   head: () => ({ meta: [{ title: "Duel — MindSprint" }] }),
 });
 
-const QUESTION_BANK = [
-  { question: "7 × 8 = ?", options: ["54", "56", "58", "64"], answer: "56" },
-  { question: "Capital of Australia?", options: ["Sydney", "Canberra", "Melbourne", "Perth"], answer: "Canberra" },
-  { question: "√144 = ?", options: ["10", "11", "12", "13"], answer: "12" },
-  { question: "Author of 1984?", options: ["Huxley", "Orwell", "Bradbury", "Salinger"], answer: "Orwell" },
-  { question: "H₂O is?", options: ["Salt", "Water", "Oxygen", "Acid"], answer: "Water" },
-  { question: "15% of 200?", options: ["20", "25", "30", "35"], answer: "30" },
-  { question: "Largest planet?", options: ["Saturn", "Mars", "Jupiter", "Earth"], answer: "Jupiter" },
-  { question: "Mona Lisa painter?", options: ["Van Gogh", "Da Vinci", "Picasso", "Monet"], answer: "Da Vinci" },
-  { question: "Speed of light (km/s)?", options: ["150,000", "300,000", "450,000", "600,000"], answer: "300,000" },
-  { question: "Smallest prime?", options: ["0", "1", "2", "3"], answer: "2" },
-  { question: "Currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], answer: "Yen" },
-  { question: "DNA stands for?", options: ["Deoxyribonucleic Acid", "Diatomic Nucleic Acid", "Dual Nuclear Acid", "Direct Nano Acid"], answer: "Deoxyribonucleic Acid" },
-  { question: "9² + 4² = ?", options: ["97", "85", "100", "81"], answer: "97" },
-  { question: "Hamlet author?", options: ["Dickens", "Shakespeare", "Twain", "Austen"], answer: "Shakespeare" },
-  { question: "Continent of Egypt?", options: ["Asia", "Europe", "Africa", "Oceania"], answer: "Africa" },
-];
-const ROUND_SECONDS = 15;
+const ROUND_SECONDS = 6;
 
 function DuelPage() {
   const { duelId } = Route.useParams();
