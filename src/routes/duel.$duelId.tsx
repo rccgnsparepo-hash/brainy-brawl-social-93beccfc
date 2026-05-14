@@ -231,6 +231,19 @@ function DuelPage() {
   );
 }
 
+function FighterOverlay({ text, final }: { text: string; final?: boolean }) {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-background/90">
+      <div className="absolute left-[12%] bottom-[22%] h-28 w-20 animate-fighter-left rounded-t-full gradient-primary shadow-glow" />
+      <div className="absolute right-[12%] bottom-[22%] h-28 w-20 animate-fighter-right rounded-t-full gradient-hot shadow-glow-purple" />
+      {final && <div className="absolute inset-x-0 bottom-[15%] mx-auto h-28 max-w-sm animate-charge rounded-full bg-xp/20 blur-3xl" />}
+      <div className={`relative font-display text-6xl font-black uppercase tracking-normal ${final ? "text-xp" : "text-gradient"}`}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
 function PlayerCard({ p, score, reverse, you }: { p: any; score: number; reverse?: boolean; you?: boolean }) {
   return (
     <div className={`flex flex-1 items-center gap-2 ${reverse ? "flex-row-reverse text-right" : ""}`}>
