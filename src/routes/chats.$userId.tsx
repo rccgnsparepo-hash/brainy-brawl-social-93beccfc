@@ -131,6 +131,7 @@ function ChatPage() {
 
   return (
     <AppShell
+      fullScreen
       title={
         <>
           <button onClick={() => nav({ to: "/chats" })} className="rounded-full glass p-2"><ArrowLeft className="h-4 w-4" /></button>
@@ -153,10 +154,10 @@ function ChatPage() {
       }
     >
       <div
-        className="relative -mx-3 min-h-[60vh] rounded-none px-3 pb-2"
+        className="relative flex min-h-[calc(100dvh-132px)] flex-col px-3 pb-24"
         style={bg ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       >
-        <div className="flex flex-col gap-2 pt-2">
+        <div className="flex flex-1 flex-col gap-2 overflow-y-auto pt-3">
           {messages.length === 0 && <div className="text-center text-xs text-muted-foreground">Say hi 👋</div>}
           {messages.map((m) => {
             const mine = m.sender_id === user?.id;
@@ -172,7 +173,7 @@ function ChatPage() {
         </div>
       </div>
 
-      <div className="sticky bottom-20 mt-3 flex items-center gap-1 rounded-full glass-strong p-1.5">
+      <div className="fixed inset-x-0 bottom-0 z-50 mx-auto flex max-w-xl items-center gap-1 rounded-t-2xl glass-strong p-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
         <button onClick={() => { setViewOnceMode(false); fileRef.current?.click(); }} className="flex h-9 w-9 items-center justify-center rounded-full glass" aria-label="Attach"><Paperclip className="h-4 w-4" /></button>
         <button onClick={() => { setViewOnceMode(true); fileRef.current?.click(); }} className={`flex h-9 w-9 items-center justify-center rounded-full ${viewOnceMode ? "bg-neon-pink text-white" : "glass"}`} aria-label="View once"><Eye className="h-4 w-4" /></button>
         <input ref={fileRef} type="file" hidden onChange={onPickFile} accept="image/*,video/*,application/pdf,.doc,.docx,.txt,.zip,.xlsx,.xls,.ppt,.pptx" />

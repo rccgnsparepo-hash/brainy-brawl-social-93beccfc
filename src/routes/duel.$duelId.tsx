@@ -10,24 +10,7 @@ export const Route = createFileRoute("/duel/$duelId")({
   head: () => ({ meta: [{ title: "Duel — MindSprint" }] }),
 });
 
-const QUESTION_BANK = [
-  { question: "7 × 8 = ?", options: ["54", "56", "58", "64"], answer: "56" },
-  { question: "Capital of Australia?", options: ["Sydney", "Canberra", "Melbourne", "Perth"], answer: "Canberra" },
-  { question: "√144 = ?", options: ["10", "11", "12", "13"], answer: "12" },
-  { question: "Author of 1984?", options: ["Huxley", "Orwell", "Bradbury", "Salinger"], answer: "Orwell" },
-  { question: "H₂O is?", options: ["Salt", "Water", "Oxygen", "Acid"], answer: "Water" },
-  { question: "15% of 200?", options: ["20", "25", "30", "35"], answer: "30" },
-  { question: "Largest planet?", options: ["Saturn", "Mars", "Jupiter", "Earth"], answer: "Jupiter" },
-  { question: "Mona Lisa painter?", options: ["Van Gogh", "Da Vinci", "Picasso", "Monet"], answer: "Da Vinci" },
-  { question: "Speed of light (km/s)?", options: ["150,000", "300,000", "450,000", "600,000"], answer: "300,000" },
-  { question: "Smallest prime?", options: ["0", "1", "2", "3"], answer: "2" },
-  { question: "Currency of Japan?", options: ["Won", "Yen", "Yuan", "Ringgit"], answer: "Yen" },
-  { question: "DNA stands for?", options: ["Deoxyribonucleic Acid", "Diatomic Nucleic Acid", "Dual Nuclear Acid", "Direct Nano Acid"], answer: "Deoxyribonucleic Acid" },
-  { question: "9² + 4² = ?", options: ["97", "85", "100", "81"], answer: "97" },
-  { question: "Hamlet author?", options: ["Dickens", "Shakespeare", "Twain", "Austen"], answer: "Shakespeare" },
-  { question: "Continent of Egypt?", options: ["Asia", "Europe", "Africa", "Oceania"], answer: "Africa" },
-];
-const ROUND_SECONDS = 15;
+const ROUND_SECONDS = 6;
 
 function DuelPage() {
   const { duelId } = Route.useParams();
@@ -37,6 +20,7 @@ function DuelPage() {
   const [round, setRound] = useState<any>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState(ROUND_SECONDS);
+  const [intro, setIntro] = useState<"3" | "2" | "1" | "Fight!!" | "Final Round" | null>(null);
   const resolvedRef = useRef<Set<string>>(new Set());
   const advancingRef = useRef<Set<number>>(new Set());
 
@@ -66,12 +50,7 @@ function DuelPage() {
       const myAns = isA ? data.answer_a : data.answer_b;
       setPicked(myAns ?? null);
     } else if (d.current_round === 0 && user?.id === d.player_a) {
-      // first round — only player_a seeds it
-      const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
-      await supabase.from("duel_rounds").insert({
-        duel_id: duelId, round_number: 1, question: q.question, options: q.options, answer: q.answer,
-      });
-      await supabase.from("duels").update({ current_round: 1 }).eq("id", duelId);
+      await supabase.rpc("seed_duel_round", { _duel_id: duelId, _round_number: 1 });
     }
   }, [duel, duelId, isA, user?.id]);
 
@@ -98,6 +77,11 @@ function DuelPage() {
     setRound(null);
     setPicked(null);
     setTimeLeft(ROUND_SECONDS);
+    if (duel.status === "active") {
+      const sequence = duel.current_round >= duel.total_rounds ? ["Final Round", "3", "2", "1", "Fight!!"] : ["3", "2", "1", "Fight!!"];
+      sequence.forEach((step, i) => window.setTimeout(() => setIntro(step as typeof intro), i * 520));
+      window.setTimeout(() => setIntro(null), sequence.length * 520);
+    }
     loadCurrentRound(duel);
   }, [duel?.current_round, duel?.status, loadCurrentRound, duel]);
 
@@ -120,11 +104,7 @@ function DuelPage() {
                 if (next > duel.total_rounds) {
                   await supabase.rpc("finish_duel", { _duel_id: duelId });
                 } else {
-                  const q = QUESTION_BANK[Math.floor(Math.random() * QUESTION_BANK.length)];
-                  await supabase.from("duel_rounds").insert({
-                    duel_id: duelId, round_number: next, question: q.question, options: q.options, answer: q.answer,
-                  });
-                  await supabase.from("duels").update({ current_round: next }).eq("id", duelId);
+                  await supabase.rpc("advance_duel_from_round", { _duel_id: duelId, _round_number: round.round_number });
                 }
               }, 1200);
             }
@@ -173,6 +153,8 @@ function DuelPage() {
         </>
       }
     >
+      {intro && <FighterOverlay text={intro} final={intro === "Final Round"} />}
+
       <div className="glass rounded-2xl p-4">
         <div className="flex items-center justify-between">
           <PlayerCard p={me} score={myScore} you />
@@ -246,6 +228,19 @@ function DuelPage() {
         <div className="mt-4 text-center text-sm text-muted-foreground">Waiting for opponent…</div>
       )}
     </AppShell>
+  );
+}
+
+function FighterOverlay({ text, final }: { text: string; final?: boolean }) {
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center overflow-hidden bg-background/90">
+      <div className="absolute left-[12%] bottom-[22%] h-28 w-20 animate-fighter-left rounded-t-full gradient-primary shadow-glow" />
+      <div className="absolute right-[12%] bottom-[22%] h-28 w-20 animate-fighter-right rounded-t-full gradient-hot shadow-glow-purple" />
+      {final && <div className="absolute inset-x-0 bottom-[15%] mx-auto h-28 max-w-sm animate-charge rounded-full bg-xp/20 blur-3xl" />}
+      <div className={`relative font-display text-6xl font-black uppercase tracking-normal ${final ? "text-xp" : "text-gradient"}`}>
+        {text}
+      </div>
+    </div>
   );
 }
 
